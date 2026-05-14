@@ -6,18 +6,14 @@ from services.estrategia_asignacion import (
     AsignarPorDisponibilidad
 )
 
+
 class AsignacionService:
     def __init__(self, estrategia: EstrategiaAsignacion = None):
-        # DIP: Depende de la abstracción EstrategiaAsignacion
         self._estrategia = estrategia or AsignarPorMenorCarga()
         self._pedido_repo = PedidoRepository()
         self._repartidor_repo = RepartidorRepository()
 
-    def set_estrategia(self, estrategia: EstrategiaAsignacion):
-        self._estrategia = estrategia
-
     def asignar_pedido(self, pedido_id: str, tipo_estrategia: str = None):
-        # Permite cambiar la estrategia dinámicamente si se solicita
         if tipo_estrategia == "disponibilidad":
             self._estrategia = AsignarPorDisponibilidad()
         elif tipo_estrategia == "menor_carga":
@@ -28,24 +24,24 @@ class AsignacionService:
         if not pedido:
             raise ValueError(f"Pedido con ID {pedido_id} no encontrado.")
 
-        if pedido.get("estado") == "Asignado":
+        if pedido.estado == "Asignado":
             raise ValueError(f"El pedido {pedido_id} ya tiene un repartidor asignado.")
 
-        # 2. Obtener todos los repartidores (objetos de dominio)
+        # 2. Obtener repartidores
         repartidores = self._repartidor_repo.buscar_todos()
 
-        # 3. Aplicar el patrón Strategy para seleccionar el repartidor idóneo
+        # 3. Aplicar patrón Strategy
         repartidor = self._estrategia.asignar(repartidores)
         if not repartidor:
-            raise ValueError("No hay repartidores disponibles con capacidad en este momento.")
+            raise ValueError("No hay repartidores disponibles con capacidad.")
 
-        # 4. Actualizar estado del repartidor (lógica de negocio interna)
+        # 4. Actualizar repartidor
         repartidor.asignar_pedido()
         self._repartidor_repo.actualizar(repartidor)
 
-        # 5. Actualizar estado del pedido
-        pedido["estado"] = "Asignado"
-        pedido["repartidor_id"] = repartidor.id
-        pedido_actualizado = self._pedido_repo.guardar(pedido)
+        # 5. Cambiar estado del pedido usando el patrón State
+        pedido.cambiar_estado("Asignado")
+        pedido.repartidor_id = repartidor.id
+        self._pedido_repo.guardar(pedido)
 
-        return pedido_actualizado
+        return pedido
