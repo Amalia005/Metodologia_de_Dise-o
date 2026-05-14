@@ -1,10 +1,12 @@
 from flask import Flask, jsonify
 from controllers.pedido_controller import pedido_bp
+from controllers.incidencia_controller import incidencia_bp
 
 app = Flask(__name__)
 
 # Registrar los controladores (Blueprints)
 app.register_blueprint(pedido_bp)
+app.register_blueprint(incidencia_bp)
 
 @app.route('/', methods=['GET'])
 def index():
