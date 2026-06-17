@@ -190,7 +190,3 @@ entrega_3/
 │
 └── requirements.txt
 ```
-
-## Código Original (Entregable 2)
-
-Los archivos originales del Entregable 2 se conservan intactos en la raíz del repositorio (`app.py`, `controllers/`, `services/`, `models/`, `repositories/`).
